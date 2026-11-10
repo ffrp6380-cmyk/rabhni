@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>عجلة الحظ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@600;700&family=Tajawal:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#E9EFF8; --ink:#16203A; --muted:#51607F; --panel:#FFFFFF; --line:#C5D0E4; --rim:#16203A; --btn:#E4572E; --btn-ink:#FFFFFF; --focus:#1B6FD1; --err:#B3261E; --note:#FFF3CC; --note-ink:#4A3800;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A2E; --ink:#F1F4FB; --muted:#A5B2CF; --panel:#1C2742; --line:#34456B; --rim:#F1F4FB; --btn:#F2703F; --btn-ink:#1A1208; --focus:#7DB7FF; --err:#FFB4AB; --note:#3A3115; --note-ink:#FFE9A8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A2E; --ink:#F1F4FB; --muted:#A5B2CF; --panel:#1C2742; --line:#34456B; --rim:#F1F4FB; --btn:#F2703F; --btn-ink:#1A1208; --focus:#7DB7FF; --err:#FFB4AB; --note:#3A3115; --note-ink:#FFE9A8;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:"Tajawal",system-ui,sans-serif}
+[hidden]{display:none!important}
+h1{font-family:"Reem Kufi","Tajawal",sans-serif; font-weight:700; font-size:clamp(2rem,7vw,3rem); margin:0}
+.sub{margin:.3rem 0 0; color:var(--muted)}
+button{font:inherit; cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.main-btn{font-family:"Reem Kufi","Tajawal",sans-serif; font-weight:700; font-size:1.35rem; background:var(--btn); color:var(--btn-ink); border:0; border-radius:999px; padding:.65rem 2.6rem; min-height:50px}
+.main-btn:disabled{opacity:.55; cursor:not-allowed}
+.link-btn{background:none; border:0; color:var(--muted); text-decoration:underline; padding:.4rem}
+
+/* التسجيل */
+#auth{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem 1rem}
+.card{width:min(100%,400px); background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:1.6rem; display:flex; flex-direction:column; gap:1rem}
+label{display:flex; flex-direction:column; gap:.35rem; font-weight:700}
+input{font:inherit; padding:.7rem .8rem; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); min-height:48px}
+input[dir="ltr"]{text-align:left}
+#code{letter-spacing:.5em; text-align:center; font-size:1.5rem}
+.error{color:var(--err); min-height:1.3rem; margin:0; font-weight:500}
+.note{background:var(--note); color:var(--note-ink); border-radius:10px; padding:.7rem .9rem; margin:0; font-size:.95rem; line-height:1.6}
+
+/* اللعبة */
+.bar{display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.9rem 1.1rem; background:var(--panel); border-bottom:1px solid var(--line)}
+.who,.bal{display:flex; align-items:center; gap:.6rem; min-width:0}
+.who b{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:36vw}
+.bal b{font-family:"Reem Kufi","Tajawal",sans-serif; font-size:1.5rem; color:var(--btn)}
+.game{display:flex; flex-direction:column; align-items:center; gap:1.2rem; padding:1.5rem 1rem 2rem}
+.stage{position:relative; width:min(88vw,420px); aspect-ratio:1; margin-top:.6rem}
+.wheel{width:100%; height:100%; border-radius:50%; display:block; transition:transform 5.2s cubic-bezier(.12,.72,.08,1); box-shadow:0 0 0 10px var(--rim), 0 14px 30px rgba(0,0,0,.28)}
+.hub{position:absolute; inset:50% auto auto 50%; width:16%; height:16%; transform:translate(-50%,-50%); background:var(--rim); border-radius:50%; box-shadow:inset 0 0 0 5px var(--bg)}
+.pointer{position:absolute; top:-14px; left:50%; width:36px; height:46px; transform:translateX(-50%); z-index:2; filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
+.result{min-height:3.2rem; margin:0; padding:.7rem 1.4rem; background:var(--panel); border:1px solid var(--line); border-radius:14px; font-size:1.25rem; font-weight:700; text-align:center; min-width:min(88vw,300px)}
+@media (prefers-reduced-motion: reduce){ .wheel{transition-duration:.6s} }
+.actions{display:flex; gap:.7rem; flex-wrap:wrap; justify-content:center}
+.sec-btn{font-weight:700; font-size:1.05rem; background:transparent; color:var(--ink); border:2px solid var(--ink); border-radius:999px; padding:.5rem 1.6rem; min-height:46px}
+.wallet{display:flex; flex-direction:column; align-items:center; gap:1rem; padding:1.2rem 1rem 2rem}
+.wallet .card{width:min(100%,440px)}
+.qr{width:220px; height:220px; align-self:center; background:#fff; border-radius:12px; border:2px dashed #9AA8C5; display:flex; align-items:center; justify-content:center; text-align:center; color:#51607F; padding:.8rem; font-size:.95rem; overflow:hidden}
+.qr img{width:100%; height:100%; object-fit:contain}
+.calc{margin:0; font-weight:700; min-height:1.4rem}
+.reqs{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.4rem; font-size:.95rem}
+.reqs li{display:flex; justify-content:space-between; gap:.6rem; padding:.45rem .7rem; background:var(--bg); border-radius:8px}
+.ok{color:var(--muted)}
+.error.good{color:var(--ink); font-weight:700}
+a.sec-btn{display:inline-flex; align-items:center; justify-content:center; text-decoration:none}
+.stats{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; width:min(100%,440px)}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:.8rem; text-align:center}
+.stat b{display:block; font-family:"Reem Kufi","Tajawal",sans-serif; font-size:1.7rem; color:var(--btn)}
+.stat span{color:var(--muted); font-size:.9rem}
+.alist{display:flex; flex-direction:column; gap:.5rem}
+.req-row{display:flex; flex-direction:column; gap:.5rem; padding:.7rem; background:var(--bg); border-radius:10px; font-size:.95rem}
+.meta{color:var(--muted); font-size:.85rem; word-break:break-all}
+.btns{display:flex; gap:.5rem}
+.btns button{flex:1; min-height:40px; border-radius:8px; font-weight:700; border:0}
+.b-ok{background:var(--btn); color:var(--btn-ink)}
+.b-no{background:transparent; color:var(--ink); border:1.5px solid var(--ink)!important}
+.tabs{display:flex; gap:.4rem; background:var(--bg); border-radius:999px; padding:.25rem}
+.tab{flex:1; border:0; background:transparent; color:var(--muted); font-weight:700; padding:.55rem; border-radius:999px; min-height:44px}
+.tab[aria-selected="true"]{background:var(--btn); color:var(--btn-ink)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>')</script>
+</head>
+<body>
+
+<section id="auth">
+  <div class="card">
+    <div>
+      <h1>عجلة الحظ</h1>
+      <p class="sub" id="auth-sub">سجّل الدخول إلى حسابك</p>
+    </div>
+
+    <div class="tabs" id="tabs" role="tablist">
+      <button class="tab" id="tab-in" role="tab" aria-selected="true" type="button">تسجيل الدخول</button>
+      <button class="tab" id="tab-up" role="tab" aria-selected="false" type="button">حساب جديد</button>
+    </div>
+
+    <form id="f-login" class="card" style="padding:0;border:0;background:none" novalidate>
+      <label>البريد الإلكتروني<input id="l-email" type="email" dir="ltr" autocomplete="email" inputmode="email"></label>
+      <label>كلمة السر<input id="l-pass" type="password" dir="ltr" autocomplete="current-password"></label>
+      <p class="error" id="l-err" role="alert"></p>
+      <button class="main-btn" type="submit">دخول</button>
+    </form>
+
+    <form id="f-reg" class="card" style="padding:0;border:0;background:none" hidden novalidate>
+      <label>اسم المستخدم<input id="name" type="text" maxlength="20" autocomplete="nickname"></label>
+      <label>البريد الإلكتروني<input id="email" type="email" dir="ltr" autocomplete="email" inputmode="email"></label>
+      <label>كلمة السر (6 أحرف على الأقل)<input id="pass" type="password" dir="ltr" autocomplete="new-password"></label>
+      <label>تأكيد كلمة السر<input id="pass2" type="password" dir="ltr" autocomplete="new-password"></label>
+      <p class="error" id="err1" role="alert"></p>
+      <button class="main-btn" id="send" type="submit">إرسال رمز التحقق</button>
+    </form>
+
+    <form id="f-ver" class="card" style="padding:0;border:0;background:none" hidden novalidate>
+      <p class="sub" style="margin:0" id="sent-to"></p>
+      <p class="note" id="demo-note" hidden></p>
+      <label>رمز التحقق<input id="code" type="text" inputmode="numeric" maxlength="8" autocomplete="one-time-code" dir="ltr"></label>
+      <p class="error" id="err2" role="alert"></p>
+      <button class="main-btn" type="submit">تأكيد</button>
+      <button class="link-btn" id="resend" type="button">إعادة إرسال الرمز</button>
+      <button class="link-btn" id="back" type="button">تعديل البريد</button>
+    </form>
+  </div>
+</section>
+
+<section id="app" hidden>
+  <header class="bar" dir="ltr">
+    <div class="who">
+      <b id="uname" dir="auto"></b>
+      <button class="link-btn" id="logout" type="button" dir="rtl">خروج</button>
+    </div>
+    <div class="bal" dir="rtl"><span>الرصيد</span><b id="bal">٠</b></div>
+  </header>
+
+  <main class="game">
+    <h1>عجلة الحظ</h1>
+    <div class="stage">
+      <svg class="pointer" viewBox="0 0 36 46" aria-hidden="true"><path d="M18 46 2 10A18 18 0 1 1 34 10Z" fill="#E4572E" stroke="#16203A" stroke-width="3"/><circle cx="18" cy="16" r="5" fill="#fff"/></svg>
+      <canvas id="wheel" class="wheel" role="img" aria-label="عجلة الحظ"></canvas>
+      <div class="hub"></div>
+    </div>
+    <button class="main-btn" id="spin" type="button">دوّر العجلة (١٠ نقاط)</button>
+    <p class="result" id="result" aria-live="polite">لم تُدوَّر العجلة بعد</p>
+    <div class="actions">
+      <button class="sec-btn" id="go-topup" type="button">شحن الرصيد</button>
+      <button class="sec-btn" id="go-withdraw" type="button">سحب الرصيد</button>
+    </div>
+    <a class="sec-btn" id="contact" href="#" target="_blank" rel="noopener noreferrer">تواصل مع الإدارة</a>
+    <button class="sec-btn" id="go-admin" type="button" hidden>لوحة الإدارة</button>
+    <button class="link-btn" id="topup" type="button" hidden>انتهى رصيدك، اشحن الآن</button>
+  </main>
+
+  <section class="wallet" id="v-admin" hidden>
+    <h1>لوحة الإدارة</h1>
+    <div class="stats">
+      <div class="stat"><b id="s-users">٠</b><span>عدد المستخدمين</span></div>
+      <div class="stat"><b id="s-active">٠</b><span>نشطون (آخر ٢٤ ساعة)</span></div>
+      <div class="stat"><b id="s-top">٠</b><span>طلبات شحن معلّقة</span></div>
+      <div class="stat"><b id="s-wd">٠</b><span>طلبات سحب معلّقة</span></div>
+    </div>
+    <div class="card"><b>طلبات الشحن</b><div class="alist" id="a-top"></div></div>
+    <div class="card"><b>طلبات السحب</b><div class="alist" id="a-wd"></div></div>
+    <div class="card"><b>المستخدمون</b><div class="alist" id="a-users"></div></div>
+    <button class="link-btn" id="a-refresh" type="button">تحديث البيانات</button>
+    <button class="link-btn" data-back type="button">رجوع إلى العجلة</button>
+  </section>
+
+  <section class="wallet" id="v-topup" hidden>
+    <h1>شحن الرصيد</h1>
+    <div class="card">
+      <p class="sub" style="margin:0">حوّل المبلغ عبر تطبيق شام كاش بمسح الباركود، ثم اكتب المبلغ ورقم العملية. سعر النقطة الواحدة ١٠ ل.س.</p>
+      <div class="qr" id="qr">ضع صورة باركود شام كاش هنا</div>
+      <form id="f-top" class="card" style="padding:0;border:0;background:none" novalidate>
+        <label>المبلغ المراد شحنه (ل.س)<input id="t-amt" type="number" inputmode="numeric" min="10" step="10" dir="ltr"></label>
+        <p class="calc" id="t-calc">سعر النقطة الواحدة ١٠ ل.س</p>
+        <label>رقم العملية<input id="t-tx" type="text" dir="ltr" autocomplete="off"></label>
+        <p class="error" id="t-err" role="alert"></p>
+        <button class="main-btn" type="submit">إرسال طلب الشحن</button>
+      </form>
+    </div>
+    <div class="card"><b>آخر طلبات الشحن</b><ul class="reqs" id="t-list"></ul></div>
+    <button class="link-btn" data-back type="button">رجوع إلى العجلة</button>
+  </section>
+
+  <section class="wallet" id="v-withdraw" hidden>
+    <h1>سحب الرصيد</h1>
+    <div class="card">
+      <p class="sub" style="margin:0">اكتب عدد النقاط ورقم حساب شام كاش الذي سيصله المبلغ. سعر النقطة الواحدة ١٠ ل.س.</p>
+      <form id="f-wd" class="card" style="padding:0;border:0;background:none" novalidate>
+        <label>عدد النقاط المراد سحبها<input id="w-pts" type="number" inputmode="numeric" min="10" step="1" dir="ltr"></label>
+        <p class="calc" id="w-calc">أقل مبلغ للسحب ١٠ نقاط</p>
+        <label>رقم حساب شام كاش<input id="w-acc" type="text" dir="ltr" autocomplete="off"></label>
+        <p class="error" id="w-err" role="alert"></p>
+        <button class="main-btn" type="submit">إرسال طلب السحب</button>
+      </form>
+    </div>
+    <div class="card"><b>آخر طلبات السحب</b><ul class="reqs" id="w-list"></ul></div>
+    <button class="link-btn" data-back type="button">رجوع إلى العجلة</button>
+  </section>
+</section>
+
+<script>
+(function(){
+  /* ===== الإعدادات: انسخها من Supabase → Project Settings → API ===== */
+  var SUPABASE_URL="https://zlitjengxfrlyvhypzxv.supabase.co", SUPABASE_ANON_KEY="sb_publishable_Vd9Ga7njL4rliv_74jr-0w_Z_b_M3EI";
+  var COST=10, RATE=10, FB_URL="https://www.facebook.com/share/1CWYW6QKRV/", SHAM_QR="";
+  var $=function(i){return document.getElementById(i)}, fmt=function(n){return Number(n).toLocaleString("ar-EG")};
+  var NOKEY=SUPABASE_URL.indexOf("YOUR-")>=0||SUPABASE_ANON_KEY.indexOf("YOUR-")>=0, NOLIB=!window.supabase, OK=!NOKEY&&!NOLIB, sb=OK?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+  function cfg(){return NOKEY?"لم تُوضع قيمتا SUPABASE_URL و SUPABASE_ANON_KEY داخل الملف بعد":"تعذّر تحميل مكتبة Supabase، تحقق من الإنترنت أو جرّب شبكة أخرى"}
+  var profile=null, pending=null, spinning=false, rot=0;
+  var cv=$("wheel"), btn=$("spin"), out=$("result");
+  var STATUS={pending:"قيد المراجعة",done:"مكتمل",rejected:"مرفوض"};
+  function msg(e){var m=(e&&e.message)||"";
+    if(/Invalid login/i.test(m)) return "البريد أو كلمة السر غير صحيحة";
+    if(/rate limit|too many|seconds/i.test(m)) return "محاولات كثيرة، انتظر قليلًا ثم أعد المحاولة (قد يكون حد إرسال البريد المجاني)";
+    if(/already registered/i.test(m)) return "هذا البريد مسجّل مسبقًا، استخدم تسجيل الدخول";
+    if(/email.*(invalid|not valid)|invalid.*email/i.test(m)) return "البريد الإلكتروني غير صالح";
+    if(/token.*(expired|invalid)|otp/i.test(m)) return "الرمز غير صحيح أو منتهي";
+    if(/password/i.test(m)) return "كلمة السر غير مقبولة (6 أحرف على الأقل)";
+    if(/failed to fetch|network/i.test(m)) return "تعذّر الاتصال بالخادم، تحقق من الإنترنت";
+    return "حدث خطأ: "+m}
+  function el(t,c,x){var n=document.createElement(t); if(c) n.className=c; if(x!=null) n.textContent=x; return n}
+  function when(t){if(!t) return "—"; try{return new Date(t).toLocaleString("ar-EG",{dateStyle:"short",timeStyle:"short"})}catch(e){return String(t)}}
+
+  /* ===== الدخول والتسجيل ===== */
+  function tab(w){
+    $("tabs").hidden=false; $("f-ver").hidden=true; $("f-login").hidden=(w!=="in"); $("f-reg").hidden=(w!=="up");
+    $("tab-in").setAttribute("aria-selected",w==="in"); $("tab-up").setAttribute("aria-selected",w==="up");
+    $("auth-sub").textContent=w==="in"?"سجّل الدخول إلى حسابك":"أنشئ حسابًا بالبريد الإلكتروني وكلمة سر";
+  }
+  function toVerify(){
+    $("f-reg").hidden=true; $("f-login").hidden=true; $("f-ver").hidden=false; $("tabs").hidden=true;
+    $("demo-note").hidden=true; $("err2").textContent=""; $("code").value="";
+    $("sent-to").textContent="أرسلنا رمز التحقق إلى "+pending.email; $("auth-sub").textContent="أدخل رمز التحقق لإكمال التسجيل"; $("code").focus();
+  }
+  $("tab-in").addEventListener("click",function(){tab("in")});
+  $("tab-up").addEventListener("click",function(){tab("up")});
+  $("back").addEventListener("click",function(){tab("up")});
+  $("f-reg").addEventListener("submit",async function(e){
+    e.preventDefault(); var er=$("err1"), name=$("name").value.trim(), email=$("email").value.trim().toLowerCase(), pw=$("pass").value;
+    if(!OK){er.textContent=cfg(); return}
+    if(name.length<2){er.textContent="اكتب اسم مستخدم من حرفين على الأقل"; return}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){er.textContent="اكتب بريدًا إلكترونيًا صحيحًا"; return}
+    if(pw.length<6){er.textContent="كلمة السر 6 أحرف على الأقل"; return}
+    if(pw!==$("pass2").value){er.textContent="كلمتا السر غير متطابقتين"; return}
+    er.textContent=""; $("send").disabled=true;
+    var r=await sb.auth.signUp({email:email,password:pw,options:{data:{name:name}}}); $("send").disabled=false;
+    if(r.error){er.textContent=msg(r.error); return}
+    if(r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){er.textContent="هذا البريد مسجّل مسبقًا، استخدم تسجيل الدخول"; return}
+    if(r.data.session){enter(); return}
+    pending={email:email}; toVerify();
+  });
+  $("f-ver").addEventListener("submit",async function(e){
+    e.preventDefault(); var er=$("err2"), v=$("code").value.trim();
+    if(!/^\d{6,8}$/.test(v)){er.textContent="اكتب الرمز المرسل إلى بريدك"; return}
+    var r=await sb.auth.verifyOtp({email:pending.email,token:v,type:"signup"});
+    if(r.error){er.textContent=msg(r.error); return}
+    pending=null; enter();
+  });
+  $("resend").addEventListener("click",async function(){
+    var r=await sb.auth.resend({type:"signup",email:pending.email});
+    $("err2").textContent=r.error?msg(r.error):"أُعيد إرسال رمز جديد";
+  });
+  $("f-login").addEventListener("submit",async function(e){
+    e.preventDefault(); var er=$("l-err"), email=$("l-email").value.trim().toLowerCase();
+    if(!OK){er.textContent=cfg(); return}
+    var r=await sb.auth.signInWithPassword({email:email,password:$("l-pass").value});
+    if(r.error){
+      if(/not confirmed/i.test(r.error.message)){pending={email:email}; await sb.auth.resend({type:"signup",email:email}); toVerify(); return}
+      er.textContent=msg(r.error); return;
+    }
+    er.textContent=""; $("l-pass").value=""; enter();
+  });
+  $("logout").addEventListener("click",async function(){
+    if(spinning) return; await sb.auth.signOut(); profile=null; $("app").hidden=true; $("auth").hidden=false; tab("in");
+  });
+
+  async function enter(){
+    var s=(await sb.auth.getSession()).data.session; if(!s) return;
+    var r=await sb.from("profiles").select("*").eq("id",s.user.id).maybeSingle();
+    for(var k=0;k<4&&!r.data;k++){await new Promise(function(x){setTimeout(x,900)}); r=await sb.from("profiles").select("*").eq("id",s.user.id).maybeSingle()}
+    if(!r.data){var t="تعذّر تحميل الحساب"+(r.error?": "+r.error.message:" (تأكد من تشغيل ملف SQL وتأكيد البريد)"); $("l-err").textContent=t; $("err2").textContent=t; return}
+    profile=r.data; $("auth").hidden=true; $("app").hidden=false; show("game");
+    $("uname").textContent=profile.name; $("go-admin").hidden=!profile.is_admin; out.textContent="لم تُدوَّر العجلة بعد"; paint();
+    sb.rpc("touch").then(function(){});
+  }
+  function paint(){
+    $("bal").textContent=fmt(profile.balance); var low=profile.balance<COST;
+    btn.disabled=spinning||low; $("topup").hidden=!low||spinning;
+  }
+
+  /* ===== العجلة ===== */
+  var prizes=[{t:"+١٠٠",c:"#E4572E"},{t:"حظ أوفر",c:"#4DA1E0"},{t:"+٢٠",c:"#F2B134"},{t:"+٥٠",c:"#17A398"},{t:"دور مجاني",c:"#8E4A8F"},{t:"+١٠",c:"#9BC53D"},{t:"+٢٠٠",c:"#E4572E"},{t:"حاول مجددًا",c:"#4DA1E0"}];
+  var n=prizes.length, arc=2*Math.PI/n;
+  function draw(){
+    var size=cv.clientWidth; if(!size) return; var dpr=window.devicePixelRatio||1;
+    cv.width=size*dpr; cv.height=size*dpr;
+    var g=cv.getContext("2d"); g.scale(dpr,dpr); var r=size/2; g.translate(r,r);
+    for(var i=0;i<n;i++){
+      var a0=-Math.PI/2+i*arc;
+      g.beginPath(); g.moveTo(0,0); g.arc(0,0,r,a0,a0+arc); g.closePath();
+      g.fillStyle=prizes[i].c; g.fill(); g.lineWidth=2; g.strokeStyle="rgba(255,255,255,.85)"; g.stroke();
+      g.save(); g.rotate(a0+arc/2); g.translate(r*0.6,0);
+      g.direction="rtl"; g.textAlign="center"; g.textBaseline="middle";
+      g.fillStyle=(prizes[i].c==="#F2B134"||prizes[i].c==="#9BC53D")?"#16203A":"#fff";
+      g.font="700 "+Math.round(size*0.052)+"px Tajawal, sans-serif";
+      g.fillText(prizes[i].t,0,0); g.restore();
+    }
+  }
+  window.addEventListener("resize",draw);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
+
+  btn.addEventListener("click",async function(){
+    if(spinning||profile.balance<COST) return;
+    spinning=true; paint(); out.textContent="العجلة تدور…";
+    var r=await sb.rpc("spin");
+    if(r.error){spinning=false; out.textContent=r.error.message; paint(); return}
+    var d=r.data; profile.balance=d.balance-d.value; paint();
+    var jitter=(Math.random()-0.5)*arc*0.7, target=((-(d.idx+0.5)*arc-jitter)*180/Math.PI)%360; if(target<0) target+=360;
+    rot=rot+360*6+((target-(rot%360)+360)%360); cv.style.transform="rotate("+rot+"deg)";
+    var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(function(){
+      profile.balance=d.balance; spinning=false;
+      out.textContent=d.value>0?("النتيجة: "+prizes[d.idx].t+" — ربحت "+fmt(d.value)+" نقطة"):("النتيجة: "+prizes[d.idx].t);
+      btn.textContent="دوّر مرة أخرى (١٠ نقاط)"; paint();
+    },reduce?650:5300);
+  });
+
+  /* ===== التنقل والشحن والسحب ===== */
+  function show(v){
+    ["game","topup","withdraw","admin"].forEach(function(k){(k==="game"?document.querySelector(".game"):$("v-"+k)).hidden=(k!==v)});
+    if(v==="game") draw(); else if(v==="admin") renderAdmin(); else renderReqs(v);
+    window.scrollTo(0,0);
+  }
+  async function renderReqs(type){
+    var ul=$(type==="topup"?"t-list":"w-list"); ul.textContent="";
+    var r=await sb.from("requests").select("*").eq("user_id",profile.id).eq("type",type).order("created_at",{ascending:false}).limit(5);
+    var rs=r.data||[]; if(!rs.length){ul.appendChild(el("li",null,"لا توجد طلبات بعد")); return}
+    rs.forEach(function(q){var li=el("li"); li.appendChild(el("span",null,fmt(q.points)+" نقطة ("+fmt(q.syp)+" ل.س)")); li.appendChild(el("span","ok",STATUS[q.status]||"")); ul.appendChild(li)});
+  }
+  if(SHAM_QR){var im=new Image(); im.alt="باركود شام كاش"; im.src=SHAM_QR; $("qr").textContent=""; $("qr").style.border="1px solid var(--line)"; $("qr").appendChild(im)}
+  var ct=$("contact"); if(FB_URL) ct.href=FB_URL;
+  $("go-topup").addEventListener("click",function(){if(!spinning) show("topup")});
+  $("topup").addEventListener("click",function(){show("topup")});
+  $("go-withdraw").addEventListener("click",function(){if(!spinning) show("withdraw")});
+  $("go-admin").addEventListener("click",function(){if(!spinning) show("admin")});
+  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"),function(b){b.addEventListener("click",function(){show("game")})});
+
+  $("t-amt").addEventListener("input",function(){var a=Number(this.value); $("t-calc").textContent=a>=RATE?("ستحصل على "+fmt(Math.floor(a/RATE))+" نقطة"):("سعر النقطة الواحدة "+fmt(RATE)+" ل.س")});
+  $("f-top").addEventListener("submit",async function(e){
+    e.preventDefault(); var er=$("t-err"), a=Number($("t-amt").value), tx=$("t-tx").value.trim();
+    er.className="error";
+    if(!Number.isInteger(a)||a<RATE||a%RATE!==0){er.textContent="اكتب مبلغًا من مضاعفات "+fmt(RATE)+" ل.س"; return}
+    var r=await sb.rpc("request_topup",{p_syp:a,p_tx:tx});
+    if(r.error){er.textContent=r.error.code==="23505"?"رقم العملية هذا مستخدم من قبل":r.error.message; return}
+    this.reset(); $("t-calc").textContent="سعر النقطة الواحدة "+fmt(RATE)+" ل.س"; renderReqs("topup");
+    er.className="error good"; er.textContent="استلمنا طلبك، وسيُضاف الرصيد بعد التحقق من العملية";
+  });
+  $("w-pts").addEventListener("input",function(){var p=Number(this.value); $("w-calc").textContent=p>=10?("ستستلم "+fmt(p*RATE)+" ل.س"):"أقل مبلغ للسحب ١٠ نقاط"});
+  $("f-wd").addEventListener("submit",async function(e){
+    e.preventDefault(); var er=$("w-err"), p=Number($("w-pts").value);
+    er.className="error";
+    if(!Number.isInteger(p)||p<10){er.textContent="أقل مبلغ للسحب ١٠ نقاط"; return}
+    var r=await sb.rpc("request_withdraw",{p_points:p,p_acc:$("w-acc").value});
+    if(r.error){er.textContent=r.error.message; return}
+    profile.balance=r.data; paint(); this.reset(); $("w-calc").textContent="أقل مبلغ للسحب ١٠ نقاط"; renderReqs("withdraw");
+    er.className="error good"; er.textContent="استلمنا طلب سحب "+fmt(p*RATE)+" ل.س وخُصمت النقاط من رصيدك، وسيصلك المبلغ بعد المعالجة";
+  });
+
+  /* ===== لوحة الإدارة (الصلاحيات تُفرض في قاعدة البيانات) ===== */
+  async function resolveReq(id,ok,box){
+    Array.prototype.forEach.call(box.querySelectorAll("button"),function(b){b.disabled=true});
+    var r=await sb.rpc("admin_resolve",{p_id:id,p_ok:ok});
+    if(r.error){box.textContent=r.error.message; return}
+    renderAdmin();
+  }
+  function reqList(box,type,rq){
+    box.textContent="";
+    var all=rq.filter(function(x){return x.type===type}).sort(function(a,b){return (a.status==="pending"?0:1)-(b.status==="pending"?0:1)}).slice(0,30);
+    if(!all.length){box.appendChild(el("div","meta","لا توجد طلبات")); return}
+    all.forEach(function(x){
+      var p=x.profiles||{}, row=el("div","req-row");
+      row.appendChild(el("div",null,(p.name||"—")+" — "+fmt(x.points)+" نقطة ("+fmt(x.syp)+" ل.س)"));
+      row.appendChild(el("div","meta",(p.email||"")+" · "+(type==="topup"?"رقم العملية: "+x.tx:"حساب شام كاش: "+x.acc)+" · "+when(x.created_at)+" · "+(STATUS[x.status]||"")));
+      if(x.status==="pending"){
+        var b=el("div","btns"), ok=el("button","b-ok","موافقة"), no=el("button","b-no","رفض"); ok.type="button"; no.type="button";
+        ok.addEventListener("click",function(){resolveReq(x.id,true,b)}); no.addEventListener("click",function(){resolveReq(x.id,false,b)});
+        b.appendChild(ok); b.appendChild(no); row.appendChild(b);
+      }
+      box.appendChild(row);
+    });
+  }
+  async function renderAdmin(){
+    if(!profile||!profile.is_admin) return show("game");
+    var a=await Promise.all([
+      sb.rpc("admin_stats"),
+      sb.from("requests").select("*, profiles(name,email)").order("created_at",{ascending:false}).limit(200),
+      sb.from("profiles").select("*").order("last_active",{ascending:false,nullsFirst:false}).limit(300)]);
+    if(a[0].error) return;
+    var st=a[0].data, rq=a[1].data||[], us=a[2].data||[];
+    $("s-users").textContent=fmt(st.users); $("s-active").textContent=fmt(st.active); $("s-top").textContent=fmt(st.top); $("s-wd").textContent=fmt(st.wd);
+    reqList($("a-top"),"topup",rq); reqList($("a-wd"),"withdraw",rq);
+    var ub=$("a-users"); ub.textContent="";
+    us.forEach(function(u){
+      if(u.id===profile.id){profile.balance=u.balance; paint()}
+      var row=el("div","req-row"); row.appendChild(el("div",null,u.name+" — الرصيد "+fmt(u.balance)));
+      row.appendChild(el("div","meta",u.email+" · انضم: "+when(u.joined)+" · آخر نشاط: "+when(u.last_active))); ub.appendChild(row);
+    });
+    if(!us.length) ub.appendChild(el("div","meta","لا يوجد مستخدمون"));
+  }
+  $("a-refresh").addEventListener("click",renderAdmin);
+
+  tab("in");
+  if(!OK) $("l-err").textContent=cfg();
+  else sb.auth.getSession().then(function(r){if(r.data.session) enter()});
+})();
+
+</script>
+</body>
+</html>
