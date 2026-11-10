@@ -235,7 +235,7 @@ a.sec-btn{display:inline-flex; align-items:center; justify-content:center; text-
   function toVerify(){
     $("f-reg").hidden=true; $("f-login").hidden=true; $("f-ver").hidden=false; $("tabs").hidden=true;
     $("demo-note").hidden=true; $("err2").textContent=""; $("code").value="";
-    $("sent-to").textContent="أرسلنا رمز التحقق إلى "+pending.email; $("auth-sub").textContent="أدخل رمز التحقق لإكمال التسجيل"; $("code").focus();
+    $("sent-to").textContent="أرسلنا رسالة تحقق إلى "+pending.email+": اضغط الرابط داخلها (سيفتح التحقق من Supabase ثم يعيدك هنا) أو أدخل الرمز أدناه"; $("auth-sub").textContent="أدخل رمز التحقق لإكمال التسجيل"; $("code").focus();
   }
   $("tab-in").addEventListener("click",function(){tab("in")});
   $("tab-up").addEventListener("click",function(){tab("up")});
@@ -248,7 +248,7 @@ a.sec-btn{display:inline-flex; align-items:center; justify-content:center; text-
     if(pw.length<6){er.textContent="كلمة السر 6 أحرف على الأقل"; return}
     if(pw!==$("pass2").value){er.textContent="كلمتا السر غير متطابقتين"; return}
     er.textContent=""; $("send").disabled=true;
-    var r=await sb.auth.signUp({email:email,password:pw,options:{data:{name:name}}}); $("send").disabled=false;
+    var r=await sb.auth.signUp({email:email,password:pw,options:{data:{name:name},emailRedirectTo:location.href.split("#")[0]}}); $("send").disabled=false;
     if(r.error){er.textContent=msg(r.error); return}
     if(r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){er.textContent="هذا البريد مسجّل مسبقًا، استخدم تسجيل الدخول"; return}
     if(r.data.session){enter(); return}
@@ -262,7 +262,7 @@ a.sec-btn{display:inline-flex; align-items:center; justify-content:center; text-
     pending=null; enter();
   });
   $("resend").addEventListener("click",async function(){
-    var r=await sb.auth.resend({type:"signup",email:pending.email});
+    var r=await sb.auth.resend({type:"signup",email:pending.email,options:{emailRedirectTo:location.href.split("#")[0]}});
     $("err2").textContent=r.error?msg(r.error):"أُعيد إرسال رمز جديد";
   });
   $("f-login").addEventListener("submit",async function(e){
@@ -270,7 +270,7 @@ a.sec-btn{display:inline-flex; align-items:center; justify-content:center; text-
     if(!OK){er.textContent=cfg(); return}
     var r=await sb.auth.signInWithPassword({email:email,password:$("l-pass").value});
     if(r.error){
-      if(/not confirmed/i.test(r.error.message)){pending={email:email}; await sb.auth.resend({type:"signup",email:email}); toVerify(); return}
+      if(/not confirmed/i.test(r.error.message)){pending={email:email}; await sb.auth.resend({type:"signup",email:email,options:{emailRedirectTo:location.href.split("#")[0]}}); toVerify(); return}
       er.textContent=msg(r.error); return;
     }
     er.textContent=""; $("l-pass").value=""; enter();
@@ -416,7 +416,11 @@ a.sec-btn{display:inline-flex; align-items:center; justify-content:center; text-
 
   tab("in");
   if(!OK) $("l-err").textContent=cfg();
-  else sb.auth.getSession().then(function(r){if(r.data.session) enter()});
+  else sb.auth.getSession().then(function(r){
+    if(/error_description/.test(location.hash)) $("l-err").textContent="رابط التحقق منتهي أو غير صالح، سجّل الدخول ليُعاد إرسال رمز جديد";
+    if(location.hash) history.replaceState(null,"",location.pathname+location.search);
+    if(r.data.session) enter();
+  });
 })();
 
 </script>

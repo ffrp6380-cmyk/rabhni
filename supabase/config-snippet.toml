@@ -1,0 +1,12 @@
+# أضف هذه الأسطر إلى supabase/config.toml الذي ينشئه الأمر supabase init
+# (ابحث عن القسم [auth.email] وعدّله، وأضف قسم القالب بعده).
+# انتبه: الأمر supabase config push يرفع ملف الإعدادات كاملًا إلى مشروعك،
+# فراجع قيمة site_url وبقية الإعدادات قبل تشغيله. أو اضبط الأمرين من لوحة Supabase.
+
+[auth.email]
+otp_length = 6
+otp_expiry = 3600
+
+[auth.email.template.confirmation]
+subject = "رمز التحقق - عجلة الحظ"
+content_path = "./supabase/templates/confirm.html"
